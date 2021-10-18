@@ -17,8 +17,9 @@
  * @property {String} name
  * @property {String} cssClass
  * @property {Number} playerId
+ * @property {Boolean} mainFigure
  * @property {Array<MoveOption>} moves
- * @property {Array<MoveOption>} beats
+ * @property {Array<MoveOption>} [beats]
  * @property {Positions} bonusArea
  * @property {FigureOption} [bonusFigure]
  */
@@ -28,8 +29,8 @@
  * @type {Object}
  * @property {Number} id
  * @property {String} name
- * @property {Positions & {figure: FigureOption}} startPositions
- * @property {FigureOption} baseFigure
+ * @property {Positions & {figure: String}} startPositions
+ * @property {Object<String, FigureOption>} figures
  */
 
 /**
@@ -40,7 +41,6 @@
  * @property {Number} fieldHeight
  * @property {Number} stepDelay
  * @property {Number} eventDelay
- * @property {boolean} isBeatNecessarily
  * @property {Array<PlayerOption>} players
  */
 
@@ -49,94 +49,233 @@
  */
 const ChessGame = (() => {
 
-    const allDirections = [
-        { moveX: -1, moveY:  1, maxSteps: 1 },
-        { moveX:  1, moveY:  1, maxSteps: 1 },
-        { moveX: -1, moveY: -1, maxSteps: 1 },
-        { moveX:  1, moveY: -1, maxSteps: 1 }
-    ]
+    /**
+     * @param {Number} playerId
+     * @param {FigureOption} figureOption
+     * @return {FigureOption}
+     */
+    function figure(playerId, figureOption) {
+        return {
+            ...figureOption,
+            cssClass: figureOption.cssClass + (playerId === 0 ? ' black' : ' white'),
+            playerId: playerId,
+        }
+    }
 
-    const allDirectionsNoLimit = [
-        { moveX: -1, moveY:  1, maxSteps: 8 },
-        { moveX:  1, moveY:  1, maxSteps: 8 },
-        { moveX: -1, moveY: -1, maxSteps: 8 },
-        { moveX:  1, moveY: -1, maxSteps: 8 }
-    ]
+    /**
+     * @type FigureOption
+     */
+    const startWhitePawnFigure = {
+        name: 'Пешка',
+        cssClass: 'figure pawn white',
+        playerId: 1,
+        mainFigure: false,
+        moves: [{moveX: 0, moveY: -1, maxSteps: 2}],
+        beats: [
+            { moveX: -1, moveY: -1, maxSteps: 1 },
+            { moveX:  1, moveY: -1, maxSteps: 1 }
+        ],
+        bonusArea: [
+            ...Array(10).fill(0).map((_, i) => ({x: i, y: 6})),
+            ...Array(10).fill(0).map((_, i) => ({x: i, y: 7})),
+        ],
+        bonusFigure: {
+            name: 'Пешка',
+            cssClass: 'figure pawn white',
+            playerId: 1,
+            mainFigure: false,
+            moves: [{moveX: 0, moveY: -1, maxSteps: 1}],
+            beats: [
+                { moveX: -1, moveY: -1, maxSteps: 1 },
+                { moveX:  1, moveY: -1, maxSteps: 1 }
+            ]
+        }
+    }
+
+    /**
+     * @type FigureOption
+     */
+    const startBlackPawnFigure = {
+        name: 'Пешка',
+        cssClass: 'figure pawn black',
+        playerId: 0,
+        mainFigure: false,
+        moves: [{moveX: 0, moveY: 1, maxSteps: 2}],
+        beats: [
+            { moveX: -1, moveY: 1, maxSteps: 1 },
+            { moveX:  1, moveY: 1, maxSteps: 1 }
+        ],
+        bonusArea: [
+            ...Array(10).fill(0).map((_, i) => ({x: i, y: 2})),
+            ...Array(10).fill(0).map((_, i) => ({x: i, y: 3})),
+        ],
+        bonusFigure: {
+            name: 'Пешка',
+            cssClass: 'figure pawn black',
+            playerId: 0,
+            mainFigure: false,
+            moves: [{moveX: 0, moveY: 1, maxSteps: 1}],
+            beats: [
+                { moveX: -1, moveY: 1, maxSteps: 1 },
+                { moveX:  1, moveY: 1, maxSteps: 1 }
+            ]
+        }
+    }
+
+    /**
+     * @type FigureOption
+     */
+    const knightFigure = {
+        name: 'Конь',
+        cssClass: 'figure knight',
+        playerId: 0,
+        mainFigure: false,
+        moves: [
+            {moveX:  2, moveY:  1, maxSteps: 1},
+            {moveX:  2, moveY: -1, maxSteps: 1},
+            {moveX: -2, moveY:  1, maxSteps: 1},
+            {moveX: -2, moveY: -1, maxSteps: 1},
+            {moveX:  1, moveY:  2, maxSteps: 1},
+            {moveX:  1, moveY: -2, maxSteps: 1},
+            {moveX: -1, moveY:  2, maxSteps: 1},
+            {moveX: -1, moveY: -2, maxSteps: 1}
+        ]
+    }
+
+    /**
+     * @type FigureOption
+     */
+    const bishopFigure = {
+        name: 'Слон',
+        cssClass: 'figure bishop',
+        playerId: 0,
+        mainFigure: false,
+        moves: [
+            {moveX:  1, moveY:  1, maxSteps: 8},
+            {moveX:  1, moveY: -1, maxSteps: 8},
+            {moveX: -1, moveY:  1, maxSteps: 8},
+            {moveX: -1, moveY: -1, maxSteps: 8}
+        ]
+    }
+
+    /**
+     * @type FigureOption
+     */
+    const rockFigure = {
+        name: 'Ладья',
+        cssClass: 'figure rock',
+        playerId: 0,
+        mainFigure: false,
+        moves: [
+            {moveX:  0, moveY:  1, maxSteps: 9},
+            {moveX:  0, moveY: -1, maxSteps: 9},
+            {moveX:  1, moveY:  0, maxSteps: 9},
+            {moveX: -1, moveY:  0, maxSteps: 9}
+        ]
+    }
+
+    /**
+     * @type FigureOption
+     */
+    const queenFigure = {
+        name: 'Ферзь',
+        cssClass: 'figure queen',
+        playerId: 0,
+        mainFigure: false,
+        moves: [
+            {moveX:  0, moveY:  1, maxSteps: 9},
+            {moveX:  0, moveY: -1, maxSteps: 9},
+            {moveX:  1, moveY:  0, maxSteps: 9},
+            {moveX: -1, moveY:  0, maxSteps: 9},
+            {moveX:  1, moveY:  1, maxSteps: 8},
+            {moveX:  1, moveY: -1, maxSteps: 8},
+            {moveX: -1, moveY:  1, maxSteps: 8},
+            {moveX: -1, moveY: -1, maxSteps: 8}
+        ]
+    }
+
+    /**
+     * @type FigureOption
+     */
+    const kingFigure = {
+        name: 'Король',
+        cssClass: 'figure king',
+        playerId: 0,
+        mainFigure: true,
+        moves: [
+            {moveX:  0, moveY:  1, maxSteps: 1},
+            {moveX:  0, moveY: -1, maxSteps: 1},
+            {moveX:  1, moveY:  0, maxSteps: 1},
+            {moveX: -1, moveY:  0, maxSteps: 1},
+            {moveX:  1, moveY:  1, maxSteps: 1},
+            {moveX:  1, moveY: -1, maxSteps: 1},
+            {moveX: -1, moveY:  1, maxSteps: 1},
+            {moveX: -1, moveY: -1, maxSteps: 1}
+        ]
+    }
+
 
     /**
      * @type {ChessOption}
      */
     const ClassicChessOption = {
         firstPlayerId: 1,
-        fieldWidth: 10,
-        fieldHeight: 10,
+        fieldWidth: 8,
+        fieldHeight: 8,
         stepDelay: 100,
         eventDelay: 400,
-        isBeatNecessarily: true,
         players: [
             {
                 id: 0,
                 name: 'Чёрный игрок',
                 startPositions: [
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2 + 1, y: 0})),
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2,     y: 1})),
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2 + 1, y: 2})),
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2 ,    y: 3}))
+                    ...Array(8).fill(0).map((_, i) => ({x: i, y: 1, figure: 'pawn'})),
+                    {x: 0, y: 0, figure: 'rock'},
+                    {x: 7, y: 0, figure: 'rock'},
+                    {x: 1, y: 0, figure: 'knight'},
+                    {x: 6, y: 0, figure: 'knight'},
+                    {x: 2, y: 0, figure: 'bishop'},
+                    {x: 5, y: 0, figure: 'bishop'},
+                    {x: 3, y: 0, figure: 'queen'},
+                    {x: 4, y: 0, figure: 'king'},
                 ],
-                baseFigure: {
-                    name: 'Чёрная шашка',
-                    cssClass: 'check black',
-                    playerId: 0,
-                    moves: [
-                        { moveX: -1, moveY:  1, maxSteps: 1 },
-                        { moveX:  1, moveY:  1, maxSteps: 1 }
-                    ],
-                    beats: allDirections,
-                    bonusArea: Array(10).fill(0).map((_, i) => ({x: i, y: 9})),
-                    bonusFigure: {
-                        name: 'Чёрная дамка',
-                        cssClass: 'check black king',
-                        playerId: 0,
-                        checkBackwardBeat: false,
-                        moves: allDirectionsNoLimit,
-                        beats: allDirectionsNoLimit
-                    }
+                figures: {
+                    pawn: startBlackPawnFigure,
+                    knight: figure(0, knightFigure),
+                    bishop: figure(0, bishopFigure),
+                    rock:   figure(0, rockFigure),
+                    queen:  figure(0, queenFigure),
+                    king:   figure(0, kingFigure)
                 }
             },
             {
                 id: 1,
                 name: 'Белый игрок',
                 startPositions: [
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2 + 1, y: 6})),
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2,     y: 7})),
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2 + 1, y: 8})),
-                    ...Array(5).fill(0).map((_, i) => ({x: i % 5 * 2,     y: 9}))
+                    ...Array(8).fill(0).map((_, i) => ({x: i, y: 6, figure: 'pawn'})),
+                    {x: 0, y: 7, figure: 'rock'},
+                    {x: 7, y: 7, figure: 'rock'},
+                    {x: 1, y: 7, figure: 'knight'},
+                    {x: 6, y: 7, figure: 'knight'},
+                    {x: 2, y: 7, figure: 'bishop'},
+                    {x: 5, y: 7, figure: 'bishop'},
+                    {x: 3, y: 7, figure: 'queen'},
+                    {x: 4, y: 7, figure: 'king'},
                 ],
-                baseFigure: {
-                    name: 'Белая шашка',
-                    cssClass: 'check white',
-                    playerId: 1,
-                    moves: [
-                        { moveX: -1, moveY: -1, maxSteps: 1 },
-                        { moveX:  1, moveY: -1, maxSteps: 1 }
-                    ],
-                    beats: allDirections,
-                    bonusArea: Array(10).fill(0).map((_, i) => ({x: i, y: 0})),
-                    bonusFigure: {
-                        name: 'Белая дамка',
-                        cssClass: 'check white king',
-                        playerId: 1,
-                        checkBackwardBeat: false,
-                        moves: allDirectionsNoLimit,
-                        beats: allDirectionsNoLimit
-                    }
+                figures: {
+                    pawn: startWhitePawnFigure,
+                    knight: figure(1, knightFigure),
+                    bishop: figure(1, bishopFigure),
+                    rock:   figure(1, rockFigure),
+                    queen:  figure(1, queenFigure),
+                    king:   figure(1, kingFigure)
                 }
             }
         ]
     }
 
     /**
-     * @typedef CheckersEvents
+     * @typedef ChessEvents
      * @type {'game_win'|'stalemate'}
      */
 
@@ -165,7 +304,7 @@ const ChessGame = (() => {
      * @property {boolean} canMove
      * @property {boolean} isActive
      * @property {FigureOption} option
-     * @property {HTMLElement} element
+     * @property {HTMLElement & {figure: Figure}} element
      * @property {Array<{x: Number, y: Number}>} [possibleMoves]
      * @property {Array<{x: Number, y: Number, beatFigure: Figure}>} [possibleBeats]
      */
@@ -239,8 +378,8 @@ const ChessGame = (() => {
      * @property {Chess} game
      * @property {Number} id
      * @property {String} name
-     * @property {Positions} startPosition
-     * @property {FigureOption} baseFigure
+     * @property {Positions & {figure: String}} startPosition
+     * @property {Object<String, FigureOption>} figures
      */
     class Player {
 
@@ -253,7 +392,7 @@ const ChessGame = (() => {
             this.id = option.id
             this.name = option.name
             this.startPosition = option.startPositions
-            this.baseFigure = option.baseFigure
+            this.figures = option.figures
         }
 
         /**
@@ -277,14 +416,6 @@ const ChessGame = (() => {
 
             if (!isCanMove && !isCanBeat) {
                 this.game.emit('stalemate')
-            } else if (this.game.options.isBeatNecessarily && isCanBeat) {
-                for (let figure of figures) {
-                    figure.possibleMoves = []
-                    if (figure.canMove && figure.possibleBeats.length === 0) {
-                        figure.canMove = false
-                        figure.update()
-                    }
-                }
             }
             return this
         }
@@ -308,7 +439,7 @@ const ChessGame = (() => {
     /**
      * @property {Chess} game
      */
-    class CheckersEvent extends Event {
+    class ChessEvent extends Event {
 
         /**
          * @param {String} name
@@ -340,7 +471,7 @@ const ChessGame = (() => {
          */
         constructor(field, options = ClassicChessOption) {
             this.field = field
-            this.field.classList.add('checkers')
+            this.field.classList.add('chess')
             this.eventHandler = new EventTarget()
             this.options = options
             this.players = options.players.map(playerOption => new Player(this, playerOption))
@@ -358,7 +489,7 @@ const ChessGame = (() => {
             this.figures = []
             for (let player of this.players) {
                 for (let pos of player.startPosition) {
-                    const figure = new Figure(player.baseFigure).move(pos.x, pos.y)
+                    const figure = new Figure(player.figures[pos.figure]).move(pos.x, pos.y)
                     figure.element.addEventListener('click', event => {
                         this.selectFigure(event.target.figure)
                     })
@@ -429,11 +560,7 @@ const ChessGame = (() => {
             beatFigure.remove()
             figure.move(x, y)
             figure.checkBonusPosition()
-            if (this.findAllPossibleBeats(figure).length) {
-                this.currentPlayer.beatFigure(figure)
-            } else {
-                this.nextStep()
-            }
+            this.nextStep()
             return this
         }
 
@@ -501,7 +628,9 @@ const ChessGame = (() => {
         findAllPossibleBeats(figure) {
             const possibleBeats = []
 
-            for (let move of figure.option.beats) {
+            const beats = figure.option.beats ?? figure.option.moves
+
+            for (let move of beats) {
                 let x = figure.x
                 let y = figure.y
 
@@ -511,12 +640,7 @@ const ChessGame = (() => {
 
                     const nextCell = this.findInCell(x, y)
                     if (nextCell.type === cellType.figure && nextCell.option.playerId !== this.currentPlayer.id) {
-                        x += move.moveX
-                        y += move.moveY
-                        const cellAfter = this.findInCell(x, y)
-                        if (cellAfter.type === cellType.empty) {
-                            possibleBeats.push({x, y, beatFigure: nextCell})
-                        }
+                        possibleBeats.push({x, y, beatFigure: nextCell})
                         break
                     } else if (nextCell.type !== cellType.empty) {
                         break
@@ -535,7 +659,7 @@ const ChessGame = (() => {
         checkWin() {
             this.winners = this.players.filter(
                 player => this.figures.findIndex(
-                    figure => figure.isActive && player.id === figure.option.playerId
+                    figure => figure.isActive && figure.option.mainFigure && player.id === figure.option.playerId
                 ) !== -1
             )
 
@@ -585,7 +709,7 @@ const ChessGame = (() => {
          */
 
         /**
-         * @param {CheckersEvents} event
+         * @param {ChessEvents} event
          * @param {CheckerCallback} listener
          * @return {Chess}
          */
@@ -597,11 +721,11 @@ const ChessGame = (() => {
         }
 
         /**
-         * @param {CheckersEvents} event
+         * @param {ChessEvents} event
          * @return {Chess}
          */
         emit(event) {
-            this.eventHandler.dispatchEvent(new CheckersEvent(event, this))
+            this.eventHandler.dispatchEvent(new ChessEvent(event, this))
             return this
         }
     }

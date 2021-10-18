@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Checkers JS</title>
-    <link rel="stylesheet" href="css/checkers.css">
+    <title>Chess JS</title>
+    <link rel="stylesheet" href="css/chess.css">
     <style>
         .container {
             max-width: 100vh;
@@ -13,12 +13,12 @@
 </head>
 <body>
     <div class="container">
-        <div id="checkers"></div>
+        <div id="chess"></div>
     </div>
 
     <script src="js/chess.js"></script>
     <script>
-        new ChessGame(document.getElementById('checkers'))
+        new ChessGame(document.getElementById('chess'))
             .reset()
             .start()
             .on('game_win', game => {

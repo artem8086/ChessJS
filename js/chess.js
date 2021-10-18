@@ -151,10 +151,10 @@ const ChessGame = (() => {
         playerId: 0,
         mainFigure: false,
         moves: [
-            {moveX:  1, moveY:  1, maxSteps: 8},
-            {moveX:  1, moveY: -1, maxSteps: 8},
-            {moveX: -1, moveY:  1, maxSteps: 8},
-            {moveX: -1, moveY: -1, maxSteps: 8}
+            {moveX:  1, moveY:  1, maxSteps: 7},
+            {moveX:  1, moveY: -1, maxSteps: 7},
+            {moveX: -1, moveY:  1, maxSteps: 7},
+            {moveX: -1, moveY: -1, maxSteps: 7}
         ]
     }
 
@@ -167,10 +167,10 @@ const ChessGame = (() => {
         playerId: 0,
         mainFigure: false,
         moves: [
-            {moveX:  0, moveY:  1, maxSteps: 9},
-            {moveX:  0, moveY: -1, maxSteps: 9},
-            {moveX:  1, moveY:  0, maxSteps: 9},
-            {moveX: -1, moveY:  0, maxSteps: 9}
+            {moveX:  0, moveY:  1, maxSteps: 7},
+            {moveX:  0, moveY: -1, maxSteps: 7},
+            {moveX:  1, moveY:  0, maxSteps: 7},
+            {moveX: -1, moveY:  0, maxSteps: 7}
         ]
     }
 
@@ -183,14 +183,14 @@ const ChessGame = (() => {
         playerId: 0,
         mainFigure: false,
         moves: [
-            {moveX:  0, moveY:  1, maxSteps: 9},
-            {moveX:  0, moveY: -1, maxSteps: 9},
-            {moveX:  1, moveY:  0, maxSteps: 9},
-            {moveX: -1, moveY:  0, maxSteps: 9},
-            {moveX:  1, moveY:  1, maxSteps: 8},
-            {moveX:  1, moveY: -1, maxSteps: 8},
-            {moveX: -1, moveY:  1, maxSteps: 8},
-            {moveX: -1, moveY: -1, maxSteps: 8}
+            {moveX:  0, moveY:  1, maxSteps: 7},
+            {moveX:  0, moveY: -1, maxSteps: 7},
+            {moveX:  1, moveY:  0, maxSteps: 7},
+            {moveX: -1, moveY:  0, maxSteps: 7},
+            {moveX:  1, moveY:  1, maxSteps: 7},
+            {moveX:  1, moveY: -1, maxSteps: 7},
+            {moveX: -1, moveY:  1, maxSteps: 7},
+            {moveX: -1, moveY: -1, maxSteps: 7}
         ]
     }
 

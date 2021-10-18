@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkers JS</title>
+    <link rel="stylesheet" href="css/checkers.css">
+    <style>
+        .container {
+            max-width: 100vh;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="checkers"></div>
+    </div>
+
+    <script src="js/chess.js"></script>
+    <script>
+        new ChessGame(document.getElementById('checkers'))
+            .reset()
+            .start()
+            .on('game_win', game => {
+                alert(game.winners[0].name + ' победил за ' + game.stepsCount + ' хода!')
+                game.reset().start()
+            })
+            .on('stalemate', game => {
+                alert('Пат за ' + game.stepsCount + ' ходов!')
+                game.reset().start()
+            })
+    </script>
+</body>
+</html>

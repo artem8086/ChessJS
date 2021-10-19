@@ -25,6 +25,9 @@
                 alert(game.winners[0].name + ' победил за ' + game.stepsCount + ' хода!')
                 game.reset().start()
             })
+            .on('check', game => {
+                alert(game.currentPlayer.name + ' получает шах!')
+            })
             .on('stalemate', game => {
                 alert('Пат за ' + game.stepsCount + ' ходов!')
                 game.reset().start()

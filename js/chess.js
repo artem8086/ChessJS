@@ -276,7 +276,7 @@ const ChessGame = (() => {
 
     /**
      * @typedef ChessEvents
-     * @type {'game_win'|'stalemate'}
+     * @type {'game_win'|'check'|'stalemate'}
      */
 
     /**
@@ -421,6 +421,25 @@ const ChessGame = (() => {
         }
 
         /**
+         * @return {Player}
+         */
+        afterStep() {
+            const figures = this.game.findPlayerFigures(this.id)
+
+            for (let figure of figures) {
+                this.game.findAllPossibleBeats(figure)
+
+                const king = figure.possibleBeats.find(beat => beat.beatFigure.option.mainFigure)
+                if (king !== undefined) {
+                    this.game.emit('check')
+                    break
+                }
+            }
+
+            return this
+        }
+
+        /**
          * @param {Figure} figure
          * @return {Player}
          */
@@ -428,9 +447,7 @@ const ChessGame = (() => {
             this.game.resetFigures()
             figure.canMove = true
             figure.update()
-            if (!this.game.options.isBeatNecessarily) {
-                figure.possibleMoves = [{x: figure.x, y: figure.y}]
-            }
+            figure.possibleMoves = [{x: figure.x, y: figure.y}]
             this.game.selectFigure(figure)
             return this
         }
@@ -545,6 +562,7 @@ const ChessGame = (() => {
         moveFigure(figure, x, y) {
             figure.move(x, y)
             figure.checkBonusPosition()
+            this.currentPlayer.afterStep()
             this.nextStep()
             return this
         }
@@ -560,6 +578,7 @@ const ChessGame = (() => {
             beatFigure.remove()
             figure.move(x, y)
             figure.checkBonusPosition()
+            this.currentPlayer.afterStep()
             this.nextStep()
             return this
         }

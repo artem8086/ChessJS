@@ -76,8 +76,8 @@ const ChessGame = (() => {
             { moveX:  1, moveY: -1, maxSteps: 1 }
         ],
         bonusArea: [
-            ...Array(10).fill(0).map((_, i) => ({x: i, y: 6})),
-            ...Array(10).fill(0).map((_, i) => ({x: i, y: 7})),
+            ...Array(10).fill(0).map((_, i) => ({x: i, y: 4})),
+            ...Array(10).fill(0).map((_, i) => ({x: i, y: 5})),
         ],
         bonusFigure: {
             name: 'Пешка',
